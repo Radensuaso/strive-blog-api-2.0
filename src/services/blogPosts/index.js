@@ -2,7 +2,6 @@ import express from "express";
 import {
   readBlogPosts,
   writeBlogPosts,
-  readAuthors,
   saveCoverCloudinary,
   deletePDFFile,
 } from "../../lib/writeReadTools.js";
@@ -17,34 +16,14 @@ import createHttpError from "http-errors";
 import { validationResult } from "express-validator";
 import { blogPostValidation, blogPostCommentValidation } from "./validation.js";
 import multer from "multer";
-import BlogPost from "./schema.js";
+import BlogPostModel from "./schema.js";
 
 const blogPostsRouter = express.Router(); // provide Routing
-
-// =============== Get all Blog Posts =================
-
-blogPostsRouter.get("/", async (req, res, next) => {
-  try {
-    const blogPosts = await BlogPost.find();
-
-    res.send(blogPosts);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// =============== Get single Blog Post =================
-blogPostsRouter.get("/:_id", async (req, res, next) => {
-  try {
-  } catch (error) {
-    next(error);
-  }
-});
 
 // =============== Post Blog Post =================
 blogPostsRouter.post("/", async (req, res, next) => {
   try {
-    const newBlogPost = new BlogPost(req.body);
+    const newBlogPost = new BlogPostModel(req.body);
     const savedBlogPost = await newBlogPost.save();
     res.status(201).send(savedBlogPost);
   } catch (error) {
@@ -53,17 +32,63 @@ blogPostsRouter.post("/", async (req, res, next) => {
   }
 });
 
-// =============== Update Blog Post =================
-blogPostsRouter.put("/:_id", blogPostValidation, async (req, res, next) => {
+// =============== Get all Blog Posts =================
+
+blogPostsRouter.get("/", async (req, res, next) => {
   try {
+    const blogPosts = await BlogPostModel.find();
+
+    res.send(blogPosts);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// =============== Get single Blog Post =================
+blogPostsRouter.get("/:blogPostId", async (req, res, next) => {
+  try {
+    const { blogPostId } = req.params;
+    const blogPost = await BlogPostModel.findById(blogPostId);
+    if (blogPost) {
+      res.send(blogPost);
+    } else {
+      next(createHttpError(404, `Blog Post with id: ${blogPostId} not found!`));
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// =============== Update Blog Post =================
+blogPostsRouter.put("/:blogPostId", async (req, res, next) => {
+  try {
+    const { blogPostId } = req.params;
+
+    const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
+      blogPostId,
+      req.body,
+      { new: true }
+    );
+    if (updatedBlogPost) {
+      res.send(updatedBlogPost);
+    } else {
+      next(createHttpError(404, `Blog Post with id: ${blogPostId} not found!`));
+    }
   } catch (error) {
     next(error);
   }
 });
 
 // =============== Delete Blog Post =================
-blogPostsRouter.delete("/:_id", async (req, res, next) => {
+blogPostsRouter.delete("/:blogPostId", async (req, res, next) => {
   try {
+    const { blogPostId } = req.params;
+    const deletedBlogPost = await BlogPostModel.findByIdAndDelete(blogPostId);
+    if (deletedBlogPost) {
+      res.send(deletedBlogPost);
+    } else {
+      next(createHttpError(404, `Blog Post with id: ${blogPostId} not found!`));
+    }
   } catch (error) {
     next(error);
   }
@@ -71,7 +96,7 @@ blogPostsRouter.delete("/:_id", async (req, res, next) => {
 
 // =============== BLOG POSTS COVER =================
 blogPostsRouter.post(
-  "/:_id/uploadCover",
+  "/:blogPostId/uploadCover",
   multer({ storage: saveCoverCloudinary }).single("cover"),
   async (req, res, next) => {
     try {
@@ -101,7 +126,7 @@ blogPostsRouter.post(
 );
 
 // =============== Get all BLOG POSTS COMMENTS =================
-blogPostsRouter.get("/:_id/comments", async (req, res, next) => {
+blogPostsRouter.get("/:blogPostId/comments", async (req, res, next) => {
   try {
     const paramsId = req.params._id;
     const blogPosts = await readBlogPosts();
@@ -124,7 +149,7 @@ blogPostsRouter.get("/:_id/comments", async (req, res, next) => {
 
 // =============== post BLOG POSTS COMMENTS =================
 blogPostsRouter.post(
-  "/:_id/comments",
+  "/:blogPostId/comments",
   blogPostCommentValidation,
   async (req, res, next) => {
     try {
@@ -165,7 +190,7 @@ blogPostsRouter.post(
 );
 
 // ================== DOWNLOAD BLOG POST AS PDF =================
-blogPostsRouter.get("/:_id/downloadPDF", async (req, res, next) => {
+blogPostsRouter.get("/:blogPostId/downloadPDF", async (req, res, next) => {
   try {
     const paramsID = req.params._id;
     const blogPosts = await readBlogPosts();
@@ -192,7 +217,7 @@ blogPostsRouter.get("/:_id/downloadPDF", async (req, res, next) => {
 });
 
 // ================= SEND PDF AS EMAIL ======================
-blogPostsRouter.get("/:_id/sendEmail", async (req, res, next) => {
+blogPostsRouter.get("/:blogPostId/sendEmail", async (req, res, next) => {
   try {
     const paramsID = req.params._id;
     const blogPosts = await readBlogPosts();
