@@ -17,6 +17,7 @@ import createHttpError from "http-errors";
 import { validationResult } from "express-validator";
 import { blogPostValidation, blogPostCommentValidation } from "./validation.js";
 import multer from "multer";
+import BlogPost from "./schema.js";
 
 const blogPostsRouter = express.Router(); // provide Routing
 
@@ -24,6 +25,9 @@ const blogPostsRouter = express.Router(); // provide Routing
 
 blogPostsRouter.get("/", async (req, res, next) => {
   try {
+    const blogPosts = await BlogPost.find();
+
+    res.send(blogPosts);
   } catch (error) {
     next(error);
   }
@@ -40,6 +44,9 @@ blogPostsRouter.get("/:_id", async (req, res, next) => {
 // =============== Post Blog Post =================
 blogPostsRouter.post("/", async (req, res, next) => {
   try {
+    const newBlogPost = new BlogPost(req.body);
+    const savedBlogPost = await newBlogPost.save();
+    res.status(201).send(savedBlogPost);
   } catch (error) {
     console.log(error);
     next(error);
