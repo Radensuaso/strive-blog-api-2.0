@@ -158,6 +158,21 @@ blogPostsRouter.put(
   "/:blogPostId/reviews/:reviewId",
   async (req, res, next) => {
     try {
+      const { blogPostId } = req.params;
+      const { reviewId } = req.params;
+      const blogPost = await BlogPostModel.findOneAndUpdate(
+        {
+          _id: blogPostId,
+          "reviews._id": reviewId,
+        },
+        { $set: { "reviews.$": { _id: reviewId, ...req.body } } },
+        { new: true }
+      );
+      if (blogPost) {
+        res.send(blogPost);
+      } else {
+        next(createHttpError(404, `Not found!`));
+      }
     } catch (error) {
       next(error);
     }
@@ -169,6 +184,22 @@ blogPostsRouter.delete(
   "/:blogPostId/reviews/:reviewId",
   async (req, res, next) => {
     try {
+      const { blogPostId } = req.params;
+      const { reviewId } = req.params;
+      const blogPost = await BlogPostModel.findByIdAndUpdate(
+        blogPostId,
+        {
+          $pull: {
+            reviews: { _id: reviewId },
+          },
+        },
+        { new: true }
+      );
+      if (blogPost) {
+        res.send(blogPost);
+      } else {
+        next(createHttpError(404, `Not found!`));
+      }
     } catch (error) {
       next(error);
     }
