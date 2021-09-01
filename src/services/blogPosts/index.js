@@ -90,8 +90,21 @@ blogPostsRouter.delete("/:blogPostId", async (req, res, next) => {
 });
 
 // =============== post Blog Post review =================
-blogPostsRouter.post("/:blogPostId/comments", async (req, res, next) => {
+blogPostsRouter.post("/:blogPostId/reviews", async (req, res, next) => {
   try {
+    const { blogPostId } = req.params;
+    const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
+      blogPostId,
+      {
+        $push: { reviews: req.body },
+      },
+      { new: true }
+    );
+    if (updatedBlogPost) {
+      res.send(updatedBlogPost);
+    } else {
+      next(createHttpError(404, `Blog Post with id: ${blogPostId} not found!`));
+    }
   } catch (error) {
     next(error);
   }
@@ -100,17 +113,40 @@ blogPostsRouter.post("/:blogPostId/comments", async (req, res, next) => {
 // =============== Get all Blog Post reviews =================
 blogPostsRouter.get("/:blogPostId/reviews", async (req, res, next) => {
   try {
-    res.send("ok");
+    const { blogPostId } = req.params;
+    const blogPost = await BlogPostModel.findById(blogPostId);
+    if (blogPost) {
+      res.send(blogPost.reviews);
+    } else {
+      next(createHttpError(404, `Blog Post with id: ${blogPostId} not found!`));
+    }
   } catch (error) {
     next(error);
   }
 });
 
 // =============== Get single Blog Post review =================
-blogPostsRouter.post(
+blogPostsRouter.get(
   "/:blogPostId/reviews/:reviewId",
   async (req, res, next) => {
     try {
+      const { blogPostId } = req.params;
+      const blogPost = await BlogPostModel.findById(blogPostId);
+      if (blogPost) {
+        const { reviewId } = req.params;
+        const review = blogPost.reviews.find(
+          (r) => r._id.toString() === reviewId
+        );
+        if (review) {
+          res.send(review);
+        } else {
+          next(createHttpError(404, `Review with id: ${reviewId} not found!`));
+        }
+      } else {
+        next(
+          createHttpError(404, `Blog Post with id: ${blogPostId} not found!`)
+        );
+      }
     } catch (error) {
       next(error);
     }
