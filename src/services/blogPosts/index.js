@@ -1,22 +1,17 @@
 import express from "express";
-import {
-  readBlogPosts,
-  writeBlogPosts,
-  saveCoverCloudinary,
-  deletePDFFile,
-} from "../../lib/writeReadTools.js";
-import {
+import uniqid from "uniqid";
+import createHttpError from "http-errors";
+import { validationResult } from "express-validator";
+import BlogPostModel from "./schema.js";
+
+/* import {
   getBlogPostPDFReadableStream,
   generateBlogPostPDFAsync,
 } from "../../lib/pdfMakeTools.js";
 import { pipeline } from "stream";
 import { sendEmail } from "../../lib/emailMakeTools.js";
-import uniqid from "uniqid";
-import createHttpError from "http-errors";
-import { validationResult } from "express-validator";
 import { blogPostValidation, blogPostCommentValidation } from "./validation.js";
-import multer from "multer";
-import BlogPostModel from "./schema.js";
+import multer from "multer"; */
 
 const blogPostsRouter = express.Router(); // provide Routing
 
@@ -94,6 +89,57 @@ blogPostsRouter.delete("/:blogPostId", async (req, res, next) => {
   }
 });
 
+// =============== post Blog Post review =================
+blogPostsRouter.post("/:blogPostId/comments", async (req, res, next) => {
+  try {
+  } catch (error) {
+    next(error);
+  }
+});
+
+// =============== Get all Blog Post reviews =================
+blogPostsRouter.get("/:blogPostId/reviews", async (req, res, next) => {
+  try {
+    res.send("ok");
+  } catch (error) {
+    next(error);
+  }
+});
+
+// =============== Get single Blog Post review =================
+blogPostsRouter.post(
+  "/:blogPostId/reviews/:reviewId",
+  async (req, res, next) => {
+    try {
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// =============== Update Blog Post Review =================
+blogPostsRouter.put(
+  "/:blogPostId/reviews/:reviewId",
+  async (req, res, next) => {
+    try {
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// =============== Delete Blog Post Review =================
+blogPostsRouter.delete(
+  "/:blogPostId/reviews/:reviewId",
+  async (req, res, next) => {
+    try {
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/* 
 // =============== BLOG POSTS COVER =================
 blogPostsRouter.post(
   "/:blogPostId/uploadCover",
@@ -111,70 +157,6 @@ blogPostsRouter.post(
         remainingBlogPosts.push(updatedBlogPost);
         await writeBlogPosts(remainingBlogPosts);
         res.send(updatedBlogPost);
-      } else {
-        next(
-          createHttpError(
-            404,
-            `Blog post with the id: ${paramsId} was not found.`
-          )
-        );
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// =============== Get all BLOG POSTS COMMENTS =================
-blogPostsRouter.get("/:blogPostId/comments", async (req, res, next) => {
-  try {
-    const paramsId = req.params._id;
-    const blogPosts = await readBlogPosts();
-    const blogPost = blogPosts.find((p) => p._id === paramsId);
-    if (blogPost) {
-      const blogPostComments = blogPost.comments;
-      res.send(blogPostComments);
-    } else {
-      next(
-        createHttpError(
-          404,
-          `Blog post with the id: ${paramsId} was not found.`
-        )
-      );
-    }
-  } catch (error) {
-    next(error);
-  }
-});
-
-// =============== post BLOG POSTS COMMENTS =================
-blogPostsRouter.post(
-  "/:blogPostId/comments",
-  blogPostCommentValidation,
-  async (req, res, next) => {
-    try {
-      const paramsId = req.params._id;
-      const blogPosts = await readBlogPosts();
-      const blogPost = blogPosts.find((p) => p._id === paramsId);
-      if (blogPost) {
-        const errorList = validationResult(req);
-        if (errorList.isEmpty()) {
-          //create and push new comment to blog post comments
-          const newComment = { _id: uniqid(), ...req.body };
-          const blogPostComments = blogPost.comments;
-          blogPostComments.push(newComment);
-
-          //rewrite the blog post with the new comment
-          const remainingBlogPosts = blogPosts.filter(
-            (p) => p._id !== paramsId
-          );
-          const updatedBlogPost = { ...blogPost, comments: blogPostComments };
-          remainingBlogPosts.push(updatedBlogPost);
-          await writeBlogPosts(remainingBlogPosts);
-          res.send("Comment uploaded!");
-        } else {
-          next(createHttpError(400, { errorList }));
-        }
       } else {
         next(
           createHttpError(
@@ -235,6 +217,6 @@ blogPostsRouter.get("/:blogPostId/sendEmail", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+}); */
 
 export default blogPostsRouter; // export Routing
