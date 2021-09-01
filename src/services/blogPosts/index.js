@@ -1,8 +1,7 @@
 import express from "express";
-import uniqid from "uniqid";
 import createHttpError from "http-errors";
-import { validationResult } from "express-validator";
 import BlogPostModel from "./schema.js";
+import q2m from "query-to-mongo";
 
 /* import {
   getBlogPostPDFReadableStream,
@@ -11,6 +10,7 @@ import BlogPostModel from "./schema.js";
 import { pipeline } from "stream";
 import { sendEmail } from "../../lib/emailMakeTools.js";
 import { blogPostValidation, blogPostCommentValidation } from "./validation.js";
+import { validationResult } from "express-validator";
 import multer from "multer"; */
 
 const blogPostsRouter = express.Router(); // provide Routing
@@ -31,9 +31,19 @@ blogPostsRouter.post("/", async (req, res, next) => {
 
 blogPostsRouter.get("/", async (req, res, next) => {
   try {
-    const blogPosts = await BlogPostModel.find();
+    const query = q2m(req.query);
+    console.log(query);
 
-    res.send(blogPosts);
+    const total = await BlogPostModel.countDocuments(query.criteria);
+    const blogPosts = await BlogPostModel.find(
+      query.criteria,
+      query.options.fields
+    )
+      .sort(query.options.sort)
+      .limit(query.options.limit)
+      .skip(query.options.skip);
+
+    res.send({ links: query.links("/blogPosts", total), total, blogPosts });
   } catch (error) {
     next(error);
   }
