@@ -29,7 +29,7 @@ blogPostSchema.static("findBlogPosts", async function (query) {
     .sort(query.options.sort)
     .limit(query.options.limit)
     .skip(query.options.skip)
-    .populate("authors");
+    .populate("author");
 
   return { total, blogPosts };
 });
