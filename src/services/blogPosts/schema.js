@@ -10,10 +10,7 @@ const blogPostSchema = new Schema(
       value: { type: Number, required: true },
       unit: { type: String, required: true },
     },
-    author: {
-      name: { type: String, required: true },
-      avatar: { type: String, required: true },
-    },
+    author: { type: Schema.Types.ObjectId, ref: "author", required: true },
     content: { type: String, required: true },
     reviews: [
       {
@@ -21,8 +18,23 @@ const blogPostSchema = new Schema(
         rate: { type: Number, required: true },
       },
     ],
+    likes: [{ type: Schema.Types.ObjectId, ref: "author" }],
   },
   { timestamps: true }
 );
+
+blogPostSchema.static("findBlogPosts", async (query) => {
+  const total = await BlogPostModel.countDocuments(query.criteria);
+  const blogPosts = await BlogPostModel.find(
+    query.criteria,
+    query.options.fields
+  )
+    .sort(query.options.sort)
+    .limit(query.options.limit)
+    .skip(query.options.skip)
+    .populate("authors");
+
+  return { total, blogPosts };
+});
 
 export default model("blogPost", blogPostSchema);

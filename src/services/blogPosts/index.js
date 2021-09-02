@@ -32,16 +32,7 @@ blogPostsRouter.post("/", async (req, res, next) => {
 blogPostsRouter.get("/", async (req, res, next) => {
   try {
     const query = q2m(req.query);
-    console.log(query);
-
-    const total = await BlogPostModel.countDocuments(query.criteria);
-    const blogPosts = await BlogPostModel.find(
-      query.criteria,
-      query.options.fields
-    )
-      .sort(query.options.sort)
-      .limit(query.options.limit)
-      .skip(query.options.skip);
+    const { total, blogPosts } = await BlogPostModel.findBlogPosts(query);
 
     res.send({ links: query.links("/blogPosts", total), total, blogPosts });
   } catch (error) {
@@ -108,7 +99,7 @@ blogPostsRouter.post("/:blogPostId/reviews", async (req, res, next) => {
       {
         $push: { reviews: req.body },
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
     if (updatedBlogPost) {
       res.send(updatedBlogPost);
@@ -176,7 +167,7 @@ blogPostsRouter.put(
           "reviews._id": reviewId,
         },
         { $set: { "reviews.$": { _id: reviewId, ...req.body } } },
-        { new: true }
+        { new: true, runValidators: true }
       );
       if (blogPost) {
         res.send(blogPost);
