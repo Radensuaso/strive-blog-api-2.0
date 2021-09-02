@@ -35,24 +35,51 @@ authorsRouter.get("/", async (req, res, next) => {
 });
 
 // =================== Get single Author ====================
-authorsRouter.get("/:_id", async (req, res, next) => {
+authorsRouter.get("/:authorId", async (req, res, next) => {
   try {
+    const { authorId } = req.params;
+    const author = await AuthorModel.findById(authorId);
+    if (author) {
+      res.send(author);
+    } else {
+      next(createHttpError(404, `Author with id: ${authorId} not found`));
+    }
   } catch (error) {
     next(error);
   }
 });
 
 // =================== Update Author ====================
-authorsRouter.put("/:_id", async (req, res, next) => {
+authorsRouter.put("/:authorId", async (req, res, next) => {
   try {
+    const { authorId } = req.params;
+    const updatedAuthor = await AuthorModel.findByIdAndUpdate(
+      authorId,
+      req.body,
+      {
+        new: true,
+      }
+    );
+    if (updatedAuthor) {
+      res.send(updatedAuthor);
+    } else {
+      next(createHttpError(404, `Author with id: ${authorId} not found`));
+    }
   } catch (error) {
     next(error);
   }
 });
 
 // =================== Delete Author ====================
-authorsRouter.delete("/:_id", async (req, res, next) => {
+authorsRouter.delete("/:authorId", async (req, res, next) => {
   try {
+    const { authorId } = req.params;
+    const deletedAuthor = await AuthorModel.findByIdAndDelete(authorId);
+    if (deletedAuthor) {
+      res.send(deletedAuthor);
+    } else {
+      next(createHttpError(404, `Author with id: ${authorId} not found`));
+    }
   } catch (error) {
     next(error);
   }
@@ -61,7 +88,7 @@ authorsRouter.delete("/:_id", async (req, res, next) => {
 // =================== AUTHORS AVATAR ====================
 
 authorsRouter.post(
-  "/:_id/uploadAvatar",
+  "/:authorId/uploadAvatar",
   multer({ storage: saveAvatarCloudinary }).single("avatar"),
   async (req, res, next) => {
     try {
