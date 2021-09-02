@@ -90,6 +90,40 @@ blogPostsRouter.delete("/:blogPostId", async (req, res, next) => {
   }
 });
 
+// ================= Do a like in a blog post ====================
+blogPostsRouter.post("/:blogPostId/likes/:authorId", async (req, res, next) => {
+  try {
+    const { blogPostId, authorId } = req.params;
+    const authorLiked = await BlogPostModel.findOne({
+      _id: blogPostId,
+      likes: authorId,
+    });
+    if (authorLiked) {
+      const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
+        blogPostId,
+        {
+          $pull: { likes: authorId },
+        },
+        { new: true, runValidators: true }
+      );
+      res.send(updatedBlogPost);
+    } else {
+      const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
+        blogPostId,
+        {
+          $push: { likes: authorId },
+        },
+        { new: true, runValidators: true }
+      );
+      res.send(updatedBlogPost);
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ================= Delete a like from a blog post ====================
+
 // =============== post Blog Post review =================
 blogPostsRouter.post("/:blogPostId/reviews", async (req, res, next) => {
   try {

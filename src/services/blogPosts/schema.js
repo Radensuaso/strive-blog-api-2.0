@@ -18,7 +18,14 @@ const blogPostSchema = new Schema(
         rate: { type: Number, required: true },
       },
     ],
-    likes: [{ type: Schema.Types.ObjectId, ref: "author" }],
+    likes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "author",
+        unique: true,
+        required: true,
+      },
+    ],
   },
   { timestamps: true }
 );
