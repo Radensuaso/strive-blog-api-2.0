@@ -23,12 +23,9 @@ const blogPostSchema = new Schema(
   { timestamps: true }
 );
 
-blogPostSchema.static("findBlogPosts", async (query) => {
-  const total = await BlogPostModel.countDocuments(query.criteria);
-  const blogPosts = await BlogPostModel.find(
-    query.criteria,
-    query.options.fields
-  )
+blogPostSchema.static("findBlogPosts", async function (query) {
+  const total = await this.countDocuments(query.criteria);
+  const blogPosts = await this.find(query.criteria, query.options.fields)
     .sort(query.options.sort)
     .limit(query.options.limit)
     .skip(query.options.skip)
