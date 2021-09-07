@@ -122,8 +122,6 @@ blogPostsRouter.post("/:blogPostId/likes/:authorId", async (req, res, next) => {
   }
 });
 
-// ================= Delete a like from a blog post ====================
-
 // =============== post Blog Post review =================
 blogPostsRouter.post("/:blogPostId/reviews", async (req, res, next) => {
   try {
