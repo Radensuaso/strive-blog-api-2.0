@@ -10,7 +10,16 @@ export const notFoundHandler = (err, req, res, next) => {
 export const badRequestHandler = (err, req, res, next) => {
   if (err.status === 400 || err.name === "ValidationError") {
     console.log(err);
-    res.status(400).send(err.errors.content.message);
+    res.status(400).send(err.message);
+  } else {
+    next(err);
+  }
+};
+
+export const unauthorizedHandler = (err, req, res, next) => {
+  if (err.status === 401) {
+    console.log(err);
+    res.status(401).send(err.message || "You are not logged in!");
   } else {
     next(err);
   }
