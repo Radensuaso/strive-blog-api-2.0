@@ -2,6 +2,7 @@ import express from "express";
 import AuthorModel from "./schema.js";
 import q2m from "query-to-mongo";
 import createHttpError from "http-errors";
+import basicAuthMiddleware from "../../auth/basicAuth.js";
 /* import { authorsValidation } from "./validation.js";
 import { validationResult } from "express-validator";
 import multer from "multer";
@@ -23,7 +24,7 @@ authorsRouter.post("/", async (req, res, next) => {
 
 // =================== Get all Authors ====================
 
-authorsRouter.get("/", async (req, res, next) => {
+authorsRouter.get("/", basicAuthMiddleware, async (req, res, next) => {
   try {
     const query = q2m(req.query);
     const { total, authors } = await AuthorModel.findAuthors(query);

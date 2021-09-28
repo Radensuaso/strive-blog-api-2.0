@@ -43,4 +43,19 @@ authorSchema.static("findAuthors", async function (query) {
   return { total, authors };
 });
 
+//Checking credentials
+authorSchema.statics.checkCredentials = async function (email, plainPassword) {
+  const author = await this.findOne({ email });
+  if (author) {
+    const isMatch = await bcrypt.compare(plainPassword, author.password);
+    if (isMatch) {
+      return author;
+    } else {
+      return null;
+    }
+  } else {
+    return null;
+  }
+};
+
 export default model("author", authorSchema);
