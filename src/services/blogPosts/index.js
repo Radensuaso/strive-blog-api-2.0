@@ -2,6 +2,8 @@ import express from "express";
 import createHttpError from "http-errors";
 import BlogPostModel from "./schema.js";
 import q2m from "query-to-mongo";
+import basicAuthMiddleware from "../../auth/basicAuth.js";
+import adminOnlyMiddleware from "../../auth/adminAuth.js";
 
 /* import {
   getBlogPostPDFReadableStream,
@@ -16,9 +18,12 @@ import multer from "multer"; */
 const blogPostsRouter = express.Router(); // provide Routing
 
 // =============== Post Blog Post =================
-blogPostsRouter.post("/", async (req, res, next) => {
+blogPostsRouter.post("/", basicAuthMiddleware, async (req, res, next) => {
   try {
-    const newBlogPost = new BlogPostModel(req.body);
+    const newBlogPost = new BlogPostModel({
+      ...req.body,
+      author: req.author._id,
+    });
     const savedBlogPost = await newBlogPost.save();
     res.status(201).send(savedBlogPost);
   } catch (error) {

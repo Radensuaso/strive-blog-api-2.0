@@ -31,6 +31,16 @@ authorSchema.pre("save", async function (next) {
   next();
 });
 
+authorSchema.pre("findOneAndUpdate", async function () {
+  const update = this.getUpdate();
+  const { password: plainPwd } = update;
+
+  if (plainPwd) {
+    const password = await bcrypt.hash(plainPwd, 10);
+    this.setUpdate({ ...update, password });
+  }
+});
+
 //Showing json without passwords
 authorSchema.methods.toJSON = function () {
   const authorObject = this.toObject();
