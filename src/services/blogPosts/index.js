@@ -129,6 +129,68 @@ blogPostsRouter.get(
   }
 );
 
+// =============== Update my Blog post ========================
+blogPostsRouter.put(
+  "/:blogPostId/me/stories",
+  basicAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const { blogPostId } = req.params;
+      const authorId = req.author._id;
+
+      const updatedBlogPost = await BlogPostModel.findOneAndUpdate(
+        {
+          _id: blogPostId,
+          author: authorId,
+        },
+        req.body,
+        { new: true }
+      );
+      if (updatedBlogPost) {
+        res.send(updatedBlogPost);
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Blog Post with id: ${blogPostId} not found! Or you are not authorized to change this post.`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// =============== Delete my Blog post ========================
+blogPostsRouter.delete(
+  "/:blogPostId/me/stories",
+  basicAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const { blogPostId } = req.params;
+      const authorId = req.author._id;
+
+      const deletedBlogPost = await BlogPostModel.findOneAndDelete({
+        _id: blogPostId,
+        author: authorId,
+      });
+      if (deletedBlogPost) {
+        res.send(deletedBlogPost);
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Blog Post with id: ${blogPostId} not found! Or you are not authorized to change this post.`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ================= Do a like in a blog post ====================
 blogPostsRouter.post(
   "/:blogPostId/likes/",
