@@ -101,6 +101,16 @@ authorsRouter.delete(
     }
   }
 );
+
+// =================== Get me ====================
+authorsRouter.get("/data/me", basicAuthMiddleware, async (req, res, next) => {
+  try {
+    res.send(req.author);
+  } catch (error) {
+    next(error);
+  }
+});
+
 /* 
 // =================== AUTHORS AVATAR ====================
 
