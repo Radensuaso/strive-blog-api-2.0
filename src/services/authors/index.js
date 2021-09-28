@@ -111,6 +111,34 @@ authorsRouter.get("/data/me", basicAuthMiddleware, async (req, res, next) => {
   }
 });
 
+// =================== Update me ====================
+authorsRouter.put("/data/me", basicAuthMiddleware, async (req, res, next) => {
+  try {
+    const updatedMe = await AuthorModel.findByIdAndUpdate(
+      req.author._id,
+      { ...req.body, role: req.author.role },
+      { new: true }
+    );
+    res.send(updatedMe);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// =================== Delete me ====================
+authorsRouter.delete(
+  "/data/me",
+  basicAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const deletedMe = await AuthorModel.findByIdAndDelete(req.author._id);
+      res.send("You've deleted your account!");
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 /* 
 // =================== AUTHORS AVATAR ====================
 

@@ -20,13 +20,14 @@ const authorSchema = new Schema(
   { timestamps: true }
 );
 
-// Hash passwords
+// Hashing passwords
 authorSchema.pre("save", async function (next) {
-  const plainPassword = this.password;
+  if (!this.isModified("password")) return next();
 
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(plainPassword, 10);
-  }
+  const hash = await bcrypt.hash(this.password, 12);
+  this.password = hash;
+
+  return next();
   next();
 });
 
