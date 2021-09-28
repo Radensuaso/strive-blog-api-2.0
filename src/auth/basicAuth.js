@@ -11,7 +11,7 @@ const basicAuthMiddleware = async (req, res, next) => {
     const author = await AuthorModel.checkCredentials(email, plainPassword);
 
     if (author) {
-      req.user = author;
+      req.author = author;
       next();
     } else {
       next(createHttpError(401, "Email and/or password are not correct!"));

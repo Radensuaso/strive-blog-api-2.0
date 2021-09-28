@@ -3,6 +3,7 @@ import AuthorModel from "./schema.js";
 import q2m from "query-to-mongo";
 import createHttpError from "http-errors";
 import basicAuthMiddleware from "../../auth/basicAuth.js";
+import adminOnlyMiddleware from "../../auth/adminAuth.js";
 /* import { authorsValidation } from "./validation.js";
 import { validationResult } from "express-validator";
 import multer from "multer";
@@ -36,55 +37,70 @@ authorsRouter.get("/", basicAuthMiddleware, async (req, res, next) => {
 });
 
 // =================== Get single Author ====================
-authorsRouter.get("/:authorId", async (req, res, next) => {
-  try {
-    const { authorId } = req.params;
-    const author = await AuthorModel.findById(authorId);
-    if (author) {
-      res.send(author);
-    } else {
-      next(createHttpError(404, `Author with id: ${authorId} not found`));
+authorsRouter.get(
+  "/:authorId",
+  basicAuthMiddleware,
+  adminOnlyMiddleware,
+  async (req, res, next) => {
+    try {
+      const { authorId } = req.params;
+      const author = await AuthorModel.findById(authorId);
+      if (author) {
+        res.send(author);
+      } else {
+        next(createHttpError(404, `Author with id: ${authorId} not found`));
+      }
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 // =================== Update Author ====================
-authorsRouter.put("/:authorId", async (req, res, next) => {
-  try {
-    const { authorId } = req.params;
-    const updatedAuthor = await AuthorModel.findByIdAndUpdate(
-      authorId,
-      req.body,
-      {
-        new: true,
+authorsRouter.put(
+  "/:authorId",
+  basicAuthMiddleware,
+  adminOnlyMiddleware,
+  async (req, res, next) => {
+    try {
+      const { authorId } = req.params;
+      const updatedAuthor = await AuthorModel.findByIdAndUpdate(
+        authorId,
+        req.body,
+        {
+          new: true,
+        }
+      );
+      if (updatedAuthor) {
+        res.send(updatedAuthor);
+      } else {
+        next(createHttpError(404, `Author with id: ${authorId} not found`));
       }
-    );
-    if (updatedAuthor) {
-      res.send(updatedAuthor);
-    } else {
-      next(createHttpError(404, `Author with id: ${authorId} not found`));
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 // =================== Delete Author ====================
-authorsRouter.delete("/:authorId", async (req, res, next) => {
-  try {
-    const { authorId } = req.params;
-    const deletedAuthor = await AuthorModel.findByIdAndDelete(authorId);
-    if (deletedAuthor) {
-      res.send(deletedAuthor);
-    } else {
-      next(createHttpError(404, `Author with id: ${authorId} not found`));
+authorsRouter.delete(
+  "/:authorId",
+  basicAuthMiddleware,
+  adminOnlyMiddleware,
+  async (req, res, next) => {
+    try {
+      const { authorId } = req.params;
+      const deletedAuthor = await AuthorModel.findByIdAndDelete(authorId);
+      if (deletedAuthor) {
+        res.send(deletedAuthor);
+      } else {
+        next(createHttpError(404, `Author with id: ${authorId} not found`));
+      }
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    next(error);
   }
-});
+);
 /* 
 // =================== AUTHORS AVATAR ====================
 

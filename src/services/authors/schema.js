@@ -10,6 +10,12 @@ const authorSchema = new Schema(
     password: { type: String, required: true },
     birthDate: { type: Date, required: true },
     avatar: { type: String, required: true },
+    role: {
+      type: String,
+      required: true,
+      enum: ["Author", "Admin"],
+      default: "Author",
+    },
   },
   { timestamps: true }
 );
