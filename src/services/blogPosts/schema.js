@@ -10,7 +10,12 @@ const blogPostSchema = new Schema(
       value: { type: Number, required: true },
       unit: { type: String, required: true },
     },
-    author: { type: Schema.Types.ObjectId, ref: "author", required: true },
+    author: {
+      type: Schema.Types.ObjectId,
+      ref: "author",
+      required: true,
+    },
+
     content: { type: String, required: true },
     reviews: [
       {
@@ -22,7 +27,6 @@ const blogPostSchema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "author",
-        unique: true,
         required: true,
       },
     ],

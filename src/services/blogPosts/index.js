@@ -27,7 +27,6 @@ blogPostsRouter.post("/", basicAuthMiddleware, async (req, res, next) => {
     const savedBlogPost = await newBlogPost.save();
     res.status(201).send(savedBlogPost);
   } catch (error) {
-    console.log(error);
     next(error);
   }
 });

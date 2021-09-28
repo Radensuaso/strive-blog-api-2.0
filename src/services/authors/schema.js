@@ -20,7 +20,8 @@ const authorSchema = new Schema(
   { timestamps: true }
 );
 
-// Hashing passwords
+//  ======== Hashing passwords
+// creating new
 authorSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
@@ -31,6 +32,7 @@ authorSchema.pre("save", async function (next) {
   next();
 });
 
+// Updating existent
 authorSchema.pre("findOneAndUpdate", async function () {
   const update = this.getUpdate();
   const { password: plainPwd } = update;
