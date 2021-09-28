@@ -4,9 +4,11 @@ import listEndpoints from "express-list-endpoints"; // will show us the detailed
 import authorsRouter from "./services/authors/index.js";
 import blogPostsRouter from "./services/blogPosts/index.js";
 import {
-  notFoundHandler,
   badRequestHandler,
+  unauthorizedHandler,
   forbiddenHandler,
+  notFoundHandler,
+  conflictHandler,
   genericServerErrorHandler,
 } from "./errorHandlers.js";
 import { join } from "path";
@@ -41,9 +43,11 @@ server.use("/blogPosts", blogPostsRouter); // this will provide the endpoints of
 
 // ============== ERROR HANDLING ==============
 
-server.use(notFoundHandler);
 server.use(badRequestHandler);
+server.use(unauthorizedHandler);
 server.use(forbiddenHandler);
+server.use(notFoundHandler);
+server.use(conflictHandler);
 server.use(genericServerErrorHandler);
 
 // =================Run the Server ==================
