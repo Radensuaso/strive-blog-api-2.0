@@ -63,10 +63,10 @@ authorSchema.static("findAuthors", async function (query) {
 });
 
 //Checking credentials
-authorSchema.statics.checkCredentials = async function (email, plainPassword) {
+authorSchema.statics.checkCredentials = async function (email, password) {
   const author = await this.findOne({ email });
   if (author) {
-    const isMatch = await bcrypt.compare(plainPassword, author.password);
+    const isMatch = await bcrypt.compare(password, author.password);
     if (isMatch) {
       return author;
     } else {

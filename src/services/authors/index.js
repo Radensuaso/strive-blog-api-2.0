@@ -4,6 +4,8 @@ import q2m from "query-to-mongo";
 import createHttpError from "http-errors";
 import basicAuthMiddleware from "../../auth/basicAuth.js";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";
+import tokenAuthMiddleware from "../../auth/tokenAuth.js";
+import { returnJWTToken } from "../../auth/tools.js";
 /* import { authorsValidation } from "./validation.js";
 import { validationResult } from "express-validator";
 import multer from "multer";
@@ -12,7 +14,7 @@ import json2csv from "json2csv"; */
 
 const authorsRouter = express.Router(); // provide Routing
 
-// =================== Post Author ====================
+// =================== Register Author ====================
 authorsRouter.post("/register/me", async (req, res, next) => {
   try {
     const newAuthor = new AuthorModel(req.body);
@@ -23,9 +25,25 @@ authorsRouter.post("/register/me", async (req, res, next) => {
   }
 });
 
+// =================== Login me ====================
+authorsRouter.post("/login/me", async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const author = await AuthorModel.checkCredentials(email, password);
+    if (author) {
+      const accessToken = await returnJWTToken(author);
+      res.send(accessToken);
+    } else {
+      next(createHttpError(401, "Email and/or password are wrong."));
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 // =================== Get all Authors ====================
 
-authorsRouter.get("/", basicAuthMiddleware, async (req, res, next) => {
+authorsRouter.get("/", async (req, res, next) => {
   try {
     const query = q2m(req.query);
     const { total, authors } = await AuthorModel.findAuthors(query);
@@ -59,7 +77,7 @@ authorsRouter.get(
 // =================== Update Author ====================
 authorsRouter.put(
   "/:authorId",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   adminOnlyMiddleware,
   async (req, res, next) => {
     try {
@@ -85,7 +103,7 @@ authorsRouter.put(
 // =================== Delete Author ====================
 authorsRouter.delete(
   "/:authorId",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   adminOnlyMiddleware,
   async (req, res, next) => {
     try {
@@ -103,7 +121,7 @@ authorsRouter.delete(
 );
 
 // =================== Get me ====================
-authorsRouter.get("/data/me", basicAuthMiddleware, async (req, res, next) => {
+authorsRouter.get("/data/me", tokenAuthMiddleware, async (req, res, next) => {
   try {
     res.send(req.author);
   } catch (error) {
@@ -112,7 +130,7 @@ authorsRouter.get("/data/me", basicAuthMiddleware, async (req, res, next) => {
 });
 
 // =================== Update me ====================
-authorsRouter.put("/data/me", basicAuthMiddleware, async (req, res, next) => {
+authorsRouter.put("/data/me", tokenAuthMiddleware, async (req, res, next) => {
   try {
     const updatedMe = await AuthorModel.findByIdAndUpdate(
       req.author._id,
@@ -128,7 +146,7 @@ authorsRouter.put("/data/me", basicAuthMiddleware, async (req, res, next) => {
 // =================== Delete me ====================
 authorsRouter.delete(
   "/data/me",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   async (req, res, next) => {
     try {
       const deletedMe = await AuthorModel.findByIdAndDelete(req.author._id);

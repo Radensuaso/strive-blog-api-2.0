@@ -7,7 +7,7 @@ const generateJWT = (authorId) =>
     jwt.sign(
       authorId,
       process.env.JWT_SECRET,
-      { expiresIn: "1week" },
+      { expiresIn: "7 days" },
       (err, token) => {
         if (err) {
           reject(err);
@@ -32,8 +32,8 @@ export const verifyJWT = (token) => {
 };
 
 //return token
-export const returnToken = async (author) => {
-  const token = await generateJWT({ _id: author._id });
+export const returnJWTToken = async (author) => {
+  const accessToken = await generateJWT({ _id: author._id });
 
-  return token;
+  return accessToken;
 };
