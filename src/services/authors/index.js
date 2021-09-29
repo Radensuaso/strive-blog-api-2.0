@@ -2,7 +2,6 @@ import express from "express";
 import AuthorModel from "./schema.js";
 import q2m from "query-to-mongo";
 import createHttpError from "http-errors";
-import basicAuthMiddleware from "../../auth/basicAuth.js";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";
 import tokenAuthMiddleware from "../../auth/tokenAuth.js";
 import { returnJWTToken } from "../../auth/tools.js";
@@ -57,7 +56,7 @@ authorsRouter.get("/", async (req, res, next) => {
 // =================== Get single Author ====================
 authorsRouter.get(
   "/:authorId",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   adminOnlyMiddleware,
   async (req, res, next) => {
     try {

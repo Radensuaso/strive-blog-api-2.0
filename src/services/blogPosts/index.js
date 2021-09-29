@@ -2,7 +2,7 @@ import express from "express";
 import createHttpError from "http-errors";
 import BlogPostModel from "./schema.js";
 import q2m from "query-to-mongo";
-import basicAuthMiddleware from "../../auth/basicAuth.js";
+import tokenAuthMiddleware from "../../auth/tokenAuth.js";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";
 
 /* import {
@@ -18,7 +18,7 @@ import multer from "multer"; */
 const blogPostsRouter = express.Router(); // provide Routing
 
 // =============== Post Blog Post =================
-blogPostsRouter.post("/", basicAuthMiddleware, async (req, res, next) => {
+blogPostsRouter.post("/", tokenAuthMiddleware, async (req, res, next) => {
   try {
     const newBlogPost = new BlogPostModel({
       ...req.body,
@@ -47,7 +47,7 @@ blogPostsRouter.get("/", async (req, res, next) => {
 // =============== Get single Blog Post =================
 blogPostsRouter.get(
   "/:blogPostId",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   adminOnlyMiddleware,
   async (req, res, next) => {
     try {
@@ -69,7 +69,7 @@ blogPostsRouter.get(
 // =============== Update Blog Post =================
 blogPostsRouter.put(
   "/:blogPostId",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   adminOnlyMiddleware,
   async (req, res, next) => {
     try {
@@ -96,7 +96,7 @@ blogPostsRouter.put(
 // =============== Delete Blog Post =================
 blogPostsRouter.delete(
   "/:blogPostId",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   adminOnlyMiddleware,
   async (req, res, next) => {
     try {
@@ -118,7 +118,7 @@ blogPostsRouter.delete(
 // =============== Get my Blog posts ========================
 blogPostsRouter.get(
   "/me/stories",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   async (req, res, next) => {
     try {
       const myBlogPosts = await BlogPostModel.find({ author: req.author._id });
@@ -132,7 +132,7 @@ blogPostsRouter.get(
 // =============== Update my Blog post ========================
 blogPostsRouter.put(
   "/:blogPostId/me/stories",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   async (req, res, next) => {
     try {
       const { blogPostId } = req.params;
@@ -165,7 +165,7 @@ blogPostsRouter.put(
 // =============== Delete my Blog post ========================
 blogPostsRouter.delete(
   "/:blogPostId/me/stories",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   async (req, res, next) => {
     try {
       const { blogPostId } = req.params;
@@ -194,7 +194,7 @@ blogPostsRouter.delete(
 // ================= Do a like in a blog post ====================
 blogPostsRouter.post(
   "/:blogPostId/likes/",
-  basicAuthMiddleware,
+  tokenAuthMiddleware,
   async (req, res, next) => {
     try {
       const { blogPostId } = req.params;
