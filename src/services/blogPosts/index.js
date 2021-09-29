@@ -45,26 +45,19 @@ blogPostsRouter.get("/", async (req, res, next) => {
 });
 
 // =============== Get single Blog Post =================
-blogPostsRouter.get(
-  "/:blogPostId",
-  tokenAuthMiddleware,
-  adminOnlyMiddleware,
-  async (req, res, next) => {
-    try {
-      const { blogPostId } = req.params;
-      const blogPost = await BlogPostModel.findById(blogPostId);
-      if (blogPost) {
-        res.send(blogPost);
-      } else {
-        next(
-          createHttpError(404, `Blog Post with id: ${blogPostId} not found!`)
-        );
-      }
-    } catch (error) {
-      next(error);
+blogPostsRouter.get("/:blogPostId", async (req, res, next) => {
+  try {
+    const { blogPostId } = req.params;
+    const blogPost = await BlogPostModel.findById(blogPostId);
+    if (blogPost) {
+      res.send(blogPost);
+    } else {
+      next(createHttpError(404, `Blog Post with id: ${blogPostId} not found!`));
     }
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 // =============== Update Blog Post =================
 blogPostsRouter.put(
