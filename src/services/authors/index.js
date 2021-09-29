@@ -13,7 +13,7 @@ import json2csv from "json2csv"; */
 const authorsRouter = express.Router(); // provide Routing
 
 // =================== Post Author ====================
-authorsRouter.post("/", async (req, res, next) => {
+authorsRouter.post("/register/me", async (req, res, next) => {
   try {
     const newAuthor = new AuthorModel(req.body);
     const savedAuthor = await newAuthor.save();
