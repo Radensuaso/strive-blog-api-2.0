@@ -13,6 +13,25 @@ const googleStrategy = new GoogleStrategy(
     console.log(profile);
     try {
       const author = await AuthorModel.findOne({ googleId: profile.id });
+
+      if (author) {
+        const tokens = await returnJWTToken(author);
+        passportNext(null, { tokens });
+      } else {
+        const newAuthor = {
+          name: profile.displayName,
+          email: profile.emails[0].value,
+          avatar:
+            "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png",
+          googleId: profile.id,
+          role: "Author",
+        };
+
+        const createdAuthor = new AuthorModel(newAuthor);
+        const savedAuthor = await createdAuthor.save();
+        const tokens = await returnJWTToken(savedAuthor);
+        passportNext(null, { tokens });
+      }
     } catch (error) {
       passportNext(error);
     }

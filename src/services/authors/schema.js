@@ -8,7 +8,7 @@ const authorSchema = new Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String },
-    birthDate: { type: Date, required: true },
+    birthDate: { type: Date },
     avatar: { type: String, required: true },
     googleId: { type: String },
     role: {
