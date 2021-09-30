@@ -9,7 +9,7 @@ const tokenAuthMiddleware = async (req, res, next) => {
       const decodedToken = await verifyJWT(token);
       const author = await AuthorModel.findById(decodedToken._id);
       if (author) {
-        req.author = author;
+        req.user = author;
         next();
       } else {
         next(createHttpError(404, "Author not found!"));

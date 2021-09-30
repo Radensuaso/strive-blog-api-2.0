@@ -35,7 +35,7 @@ blogPostsRouter.post("/", tokenAuthMiddleware, async (req, res, next) => {
   try {
     const newBlogPost = new BlogPostModel({
       ...req.body,
-      author: req.author._id,
+      author: req.user._id,
     });
     const savedBlogPost = await newBlogPost.save();
     res.status(201).send(savedBlogPost);
@@ -47,7 +47,7 @@ blogPostsRouter.post("/", tokenAuthMiddleware, async (req, res, next) => {
 // =============== Get my Blog posts ========================
 blogPostsRouter.get("/stories", tokenAuthMiddleware, async (req, res, next) => {
   try {
-    const myBlogPosts = await BlogPostModel.find({ author: req.author._id });
+    const myBlogPosts = await BlogPostModel.find({ author: req.user._id });
     res.send(myBlogPosts);
   } catch (error) {
     next(error);
@@ -61,7 +61,7 @@ blogPostsRouter.put(
   async (req, res, next) => {
     try {
       const { blogPostId } = req.params;
-      const authorId = req.author._id;
+      const authorId = req.user._id;
 
       const updatedBlogPost = await BlogPostModel.findOneAndUpdate(
         {
@@ -94,7 +94,7 @@ blogPostsRouter.delete(
   async (req, res, next) => {
     try {
       const { blogPostId } = req.params;
-      const authorId = req.author._id;
+      const authorId = req.user._id;
 
       const deletedBlogPost = await BlogPostModel.findOneAndDelete({
         _id: blogPostId,
@@ -123,7 +123,7 @@ blogPostsRouter.post(
   async (req, res, next) => {
     try {
       const { blogPostId } = req.params;
-      const authorId = req.author._id;
+      const authorId = req.user._id;
       const authorLiked = await BlogPostModel.findOne({
         _id: blogPostId,
         likes: authorId,

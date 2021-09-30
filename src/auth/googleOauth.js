@@ -15,22 +15,21 @@ const googleStrategy = new GoogleStrategy(
       const author = await AuthorModel.findOne({ googleId: profile.id });
 
       if (author) {
-        const tokens = await returnJWTToken(author);
-        passportNext(null, { tokens });
+        const token = await returnJWTToken(author);
+        passportNext(null, { token });
       } else {
         const newAuthor = {
           name: profile.displayName,
           email: profile.emails[0].value,
-          avatar:
-            "https://cdn.pixabay.com/photo/2016/08/08/09/17/avatar-1577909_960_720.png",
+          avatar: profile.photos[0].value,
           googleId: profile.id,
           role: "Author",
         };
 
         const createdAuthor = new AuthorModel(newAuthor);
         const savedAuthor = await createdAuthor.save();
-        const tokens = await returnJWTToken(savedAuthor);
-        passportNext(null, { tokens });
+        const token = await returnJWTToken(savedAuthor);
+        passportNext(null, { token });
       }
     } catch (error) {
       passportNext(error);
@@ -38,8 +37,8 @@ const googleStrategy = new GoogleStrategy(
   }
 );
 
-passport.serializeUser(function (author, passportNext) {
-  passportNext(null, author);
+passport.serializeUser(function (user, passportNext) {
+  passportNext(null, user);
 });
 
 export default googleStrategy;

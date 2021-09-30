@@ -66,8 +66,8 @@ authorsRouter.get(
   passport.authenticate("google"),
   async (req, res, next) => {
     try {
-      console.log("redirect");
-      res.redirect(`${process.env.FE_PROD_URL}`);
+      console.log("REQ.USER", req.user);
+      res.redirect(`${process.env.FE_PROD_URL}?accessToken=${req.user.token}`);
     } catch (error) {
       next(error);
     }
@@ -77,7 +77,7 @@ authorsRouter.get(
 // =================== Get me ====================
 authorsRouter.get("/me", tokenAuthMiddleware, async (req, res, next) => {
   try {
-    res.send(req.author);
+    res.send(req.user);
   } catch (error) {
     next(error);
   }
@@ -87,8 +87,8 @@ authorsRouter.get("/me", tokenAuthMiddleware, async (req, res, next) => {
 authorsRouter.put("/me", tokenAuthMiddleware, async (req, res, next) => {
   try {
     const updatedMe = await AuthorModel.findByIdAndUpdate(
-      req.author._id,
-      { ...req.body, role: req.author.role },
+      req.user._id,
+      { ...req.body, role: req.user.role },
       { new: true }
     );
     res.send(updatedMe);
@@ -100,7 +100,7 @@ authorsRouter.put("/me", tokenAuthMiddleware, async (req, res, next) => {
 // =================== Delete me ====================
 authorsRouter.delete("/me", tokenAuthMiddleware, async (req, res, next) => {
   try {
-    const deletedMe = await AuthorModel.findByIdAndDelete(req.author._id);
+    const deletedMe = await AuthorModel.findByIdAndDelete(req.user._id);
     res.send("You've deleted your account!");
   } catch (error) {
     next(error);
