@@ -5,6 +5,7 @@ import createHttpError from "http-errors";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";
 import tokenAuthMiddleware from "../../auth/tokenAuth.js";
 import { returnJWTToken } from "../../auth/tools.js";
+import passport from "passport";
 /* import { authorsValidation } from "./validation.js";
 import { validationResult } from "express-validator";
 import multer from "multer";
@@ -52,6 +53,26 @@ authorsRouter.post("/login", async (req, res, next) => {
     next(error);
   }
 });
+
+// ================== Google Login =================
+authorsRouter.get(
+  "/googleLogin",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+// ================= Google redirect ===============
+authorsRouter.get(
+  "/googleRedirect",
+  passport.authenticate("google"),
+  async (req, res, next) => {
+    try {
+      console.log("redirect");
+      res.redirect(`${process.env.FE_PROD_URL}`);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // =================== Get me ====================
 authorsRouter.get("/me", tokenAuthMiddleware, async (req, res, next) => {

@@ -7,9 +7,10 @@ const authorSchema = new Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String },
     birthDate: { type: Date, required: true },
     avatar: { type: String, required: true },
+    googleId: { type: String },
     role: {
       type: String,
       required: true,
