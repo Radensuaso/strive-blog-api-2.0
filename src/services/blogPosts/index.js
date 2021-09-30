@@ -17,6 +17,19 @@ import multer from "multer"; */
 
 const blogPostsRouter = express.Router(); // provide Routing
 
+// =============== Get all Blog Posts =================
+
+blogPostsRouter.get("/", async (req, res, next) => {
+  try {
+    const query = q2m(req.query);
+    const { total, blogPosts } = await BlogPostModel.findBlogPosts(query);
+
+    res.send({ links: query.links("/blogPosts", total), total, blogPosts });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // =============== Post Blog Post =================
 blogPostsRouter.post("/", tokenAuthMiddleware, async (req, res, next) => {
   try {
@@ -31,18 +44,114 @@ blogPostsRouter.post("/", tokenAuthMiddleware, async (req, res, next) => {
   }
 });
 
-// =============== Get all Blog Posts =================
-
-blogPostsRouter.get("/", async (req, res, next) => {
+// =============== Get my Blog posts ========================
+blogPostsRouter.get("/stories", tokenAuthMiddleware, async (req, res, next) => {
   try {
-    const query = q2m(req.query);
-    const { total, blogPosts } = await BlogPostModel.findBlogPosts(query);
-
-    res.send({ links: query.links("/blogPosts", total), total, blogPosts });
+    const myBlogPosts = await BlogPostModel.find({ author: req.author._id });
+    res.send(myBlogPosts);
   } catch (error) {
     next(error);
   }
 });
+
+// =============== Update my Blog post ========================
+blogPostsRouter.put(
+  "/:blogPostId/stories",
+  tokenAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const { blogPostId } = req.params;
+      const authorId = req.author._id;
+
+      const updatedBlogPost = await BlogPostModel.findOneAndUpdate(
+        {
+          _id: blogPostId,
+          author: authorId,
+        },
+        req.body,
+        { new: true }
+      );
+      if (updatedBlogPost) {
+        res.send(updatedBlogPost);
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Blog Post with id: ${blogPostId} not found! Or you are not authorized to change this post.`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// =============== Delete my Blog post ========================
+blogPostsRouter.delete(
+  "/:blogPostId/stories",
+  tokenAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const { blogPostId } = req.params;
+      const authorId = req.author._id;
+
+      const deletedBlogPost = await BlogPostModel.findOneAndDelete({
+        _id: blogPostId,
+        author: authorId,
+      });
+      if (deletedBlogPost) {
+        res.send(deletedBlogPost);
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Blog Post with id: ${blogPostId} not found! Or you are not authorized to change this post.`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ================= Do a like in a blog post ====================
+blogPostsRouter.post(
+  "/:blogPostId/likes/",
+  tokenAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const { blogPostId } = req.params;
+      const authorId = req.author._id;
+      const authorLiked = await BlogPostModel.findOne({
+        _id: blogPostId,
+        likes: authorId,
+      });
+      if (authorLiked) {
+        const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
+          blogPostId,
+          {
+            $pull: { likes: authorId },
+          },
+          { new: true, runValidators: true }
+        );
+        res.send(updatedBlogPost);
+      } else {
+        const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
+          blogPostId,
+          {
+            $push: { likes: authorId },
+          },
+          { new: true, runValidators: true }
+        );
+        res.send(updatedBlogPost);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // =============== Get single Blog Post =================
 blogPostsRouter.get("/:blogPostId", async (req, res, next) => {
@@ -101,119 +210,6 @@ blogPostsRouter.delete(
         next(
           createHttpError(404, `Blog Post with id: ${blogPostId} not found!`)
         );
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// =============== Get my Blog posts ========================
-blogPostsRouter.get(
-  "/me/stories",
-  tokenAuthMiddleware,
-  async (req, res, next) => {
-    try {
-      const myBlogPosts = await BlogPostModel.find({ author: req.author._id });
-      res.send(myBlogPosts);
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// =============== Update my Blog post ========================
-blogPostsRouter.put(
-  "/:blogPostId/me/stories",
-  tokenAuthMiddleware,
-  async (req, res, next) => {
-    try {
-      const { blogPostId } = req.params;
-      const authorId = req.author._id;
-
-      const updatedBlogPost = await BlogPostModel.findOneAndUpdate(
-        {
-          _id: blogPostId,
-          author: authorId,
-        },
-        req.body,
-        { new: true }
-      );
-      if (updatedBlogPost) {
-        res.send(updatedBlogPost);
-      } else {
-        next(
-          createHttpError(
-            404,
-            `Blog Post with id: ${blogPostId} not found! Or you are not authorized to change this post.`
-          )
-        );
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// =============== Delete my Blog post ========================
-blogPostsRouter.delete(
-  "/:blogPostId/me/stories",
-  tokenAuthMiddleware,
-  async (req, res, next) => {
-    try {
-      const { blogPostId } = req.params;
-      const authorId = req.author._id;
-
-      const deletedBlogPost = await BlogPostModel.findOneAndDelete({
-        _id: blogPostId,
-        author: authorId,
-      });
-      if (deletedBlogPost) {
-        res.send(deletedBlogPost);
-      } else {
-        next(
-          createHttpError(
-            404,
-            `Blog Post with id: ${blogPostId} not found! Or you are not authorized to change this post.`
-          )
-        );
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// ================= Do a like in a blog post ====================
-blogPostsRouter.post(
-  "/:blogPostId/likes/",
-  tokenAuthMiddleware,
-  async (req, res, next) => {
-    try {
-      const { blogPostId } = req.params;
-      const authorId = req.author._id;
-      const authorLiked = await BlogPostModel.findOne({
-        _id: blogPostId,
-        likes: authorId,
-      });
-      if (authorLiked) {
-        const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
-          blogPostId,
-          {
-            $pull: { likes: authorId },
-          },
-          { new: true, runValidators: true }
-        );
-        res.send(updatedBlogPost);
-      } else {
-        const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
-          blogPostId,
-          {
-            $push: { likes: authorId },
-          },
-          { new: true, runValidators: true }
-        );
-        res.send(updatedBlogPost);
       }
     } catch (error) {
       next(error);

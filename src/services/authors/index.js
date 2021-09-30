@@ -13,8 +13,21 @@ import json2csv from "json2csv"; */
 
 const authorsRouter = express.Router(); // provide Routing
 
+// =================== Get all Authors ====================
+
+authorsRouter.get("/", async (req, res, next) => {
+  try {
+    const query = q2m(req.query);
+    const { total, authors } = await AuthorModel.findAuthors(query);
+
+    res.send({ links: query.links("/authors", total), total, authors });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // =================== Register Author ====================
-authorsRouter.post("/register/me", async (req, res, next) => {
+authorsRouter.post("/register", async (req, res, next) => {
   try {
     const newAuthor = new AuthorModel(req.body);
     const savedAuthor = await newAuthor.save();
@@ -25,7 +38,7 @@ authorsRouter.post("/register/me", async (req, res, next) => {
 });
 
 // =================== Login me ====================
-authorsRouter.post("/login/me", async (req, res, next) => {
+authorsRouter.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const author = await AuthorModel.checkCredentials(email, password);
@@ -40,14 +53,34 @@ authorsRouter.post("/login/me", async (req, res, next) => {
   }
 });
 
-// =================== Get all Authors ====================
-
-authorsRouter.get("/", async (req, res, next) => {
+// =================== Get me ====================
+authorsRouter.get("/me", tokenAuthMiddleware, async (req, res, next) => {
   try {
-    const query = q2m(req.query);
-    const { total, authors } = await AuthorModel.findAuthors(query);
+    res.send(req.author);
+  } catch (error) {
+    next(error);
+  }
+});
 
-    res.send({ links: query.links("/authors", total), total, authors });
+// =================== Update me ====================
+authorsRouter.put("/me", tokenAuthMiddleware, async (req, res, next) => {
+  try {
+    const updatedMe = await AuthorModel.findByIdAndUpdate(
+      req.author._id,
+      { ...req.body, role: req.author.role },
+      { new: true }
+    );
+    res.send(updatedMe);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// =================== Delete me ====================
+authorsRouter.delete("/me", tokenAuthMiddleware, async (req, res, next) => {
+  try {
+    const deletedMe = await AuthorModel.findByIdAndDelete(req.author._id);
+    res.send("You've deleted your account!");
   } catch (error) {
     next(error);
   }
@@ -113,43 +146,6 @@ authorsRouter.delete(
       } else {
         next(createHttpError(404, `Author with id: ${authorId} not found`));
       }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// =================== Get me ====================
-authorsRouter.get("/data/me", tokenAuthMiddleware, async (req, res, next) => {
-  try {
-    res.send(req.author);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// =================== Update me ====================
-authorsRouter.put("/data/me", tokenAuthMiddleware, async (req, res, next) => {
-  try {
-    const updatedMe = await AuthorModel.findByIdAndUpdate(
-      req.author._id,
-      { ...req.body, role: req.author.role },
-      { new: true }
-    );
-    res.send(updatedMe);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// =================== Delete me ====================
-authorsRouter.delete(
-  "/data/me",
-  tokenAuthMiddleware,
-  async (req, res, next) => {
-    try {
-      const deletedMe = await AuthorModel.findByIdAndDelete(req.author._id);
-      res.send("You've deleted your account!");
     } catch (error) {
       next(error);
     }
