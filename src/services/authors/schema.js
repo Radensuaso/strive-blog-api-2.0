@@ -30,7 +30,6 @@ authorSchema.pre("save", async function (next) {
   this.password = hash;
 
   return next();
-  next();
 });
 
 // Updating existent
