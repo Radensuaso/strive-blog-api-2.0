@@ -15,8 +15,8 @@ export const blogPostsPdfPath = join(
 );
 
 // ==================== Tools to write and read pdf
-export const writePDFStream = async (path) => await createWriteStream(path);
-export const deletePDFFile = async (path) => await remove(path);
+export const writePDFStream = (path) => createWriteStream(path);
+export const deletePDFFile = (path) => remove(path);
 
 //============= turnToBase64Format
 const turnToBase64Format = async (url) => {
@@ -93,7 +93,7 @@ export const generateBlogPostPDFAsync = async (blogPost) => {
 
   pdfReadableStream.end();
 
-  const blogPath = join(blogPostsFolderPath, `${blogPost._id}.pdf`);
+  const blogPath = join(blogPostsPdfPath, `${blogPost.title}.pdf`);
   await asyncPipeline(pdfReadableStream, writePDFStream(blogPath));
   return blogPath;
 };

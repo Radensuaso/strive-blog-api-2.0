@@ -9,11 +9,12 @@ import { saveCoverCloudinary } from "../../lib/cloudinaryTools.js";
 import {
   getBlogPostPDFReadableStream,
   generateBlogPostPDFAsync,
+  deletePDFFile,
 } from "../../lib/pdfMakeTools.js";
 import { pipeline } from "stream";
+import { sendEmail } from "../../lib/emailTools.js";
 
 /*
-import { sendEmail } from "../../lib/emailMakeTools.js";
 import { blogPostValidation, blogPostCommentValidation } from "./validation.js";
 import { validationResult } from "express-validator";*/
 
@@ -258,7 +259,7 @@ blogPostsRouter.delete(
   }
 );
 
-// ================== DOWNLOAD BLOG POST AS PDF =================
+// ================== Download blog post as pdf =================
 blogPostsRouter.get(
   "/:blogPostId/downloadPDF",
   tokenAuthMiddleware,
@@ -290,26 +291,39 @@ blogPostsRouter.get(
   }
 );
 
-// ================= SEND PDF AS EMAIL ======================
-blogPostsRouter.get("/:blogPostId/sendEmail", async (req, res, next) => {
-  try {
-    const paramsID = req.params._id;
-    const blogPosts = await readBlogPosts();
-    const blogPost = blogPosts.find((p) => p._id === paramsID);
-    if (blogPost) {
-      const blogPostPDFPath = await generateBlogPostPDFAsync(blogPost);
-      await sendEmail(blogPost, blogPostPDFPath);
-      await deletePDFFile(blogPostPDFPath);
-      res.send("Email sent!");
-    } else {
-      res.send(
-        createHttpError(404, `Blog post with the id: ${paramsID} not found.`)
-      );
+// ================= send pdf as email ======================
+blogPostsRouter.post(
+  "/:blogPostId/sendEmail",
+  tokenAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      const { blogPostId } = req.params;
+      const author = req.user;
+      const blogPost = await BlogPostModel.findById(blogPostId);
+      if (blogPost) {
+        const blogPostPDFPath = await generateBlogPostPDFAsync(blogPost);
+        if (email) {
+          await sendEmail(blogPost, blogPostPDFPath, email, author);
+          await deletePDFFile(blogPostPDFPath);
+          res.send("Email sent!");
+        } else {
+          await deletePDFFile(blogPostPDFPath);
+          next(createHttpError(400, "Please provide a valid email."));
+        }
+      } else {
+        res.send(
+          createHttpError(
+            404,
+            `Blog post with the id: ${blogPostId} not found.`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    next(error);
   }
-});
+);
 
 /* 
 // =============== post Blog Post review =================
