@@ -1,4 +1,7 @@
 import sgMail from "@sendgrid/mail";
+import pkg from "fs-extra";
+
+const { readFile } = pkg;
 
 export const readPDFFile = async (path) => await readFile(path);
 

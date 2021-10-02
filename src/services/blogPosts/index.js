@@ -6,12 +6,13 @@ import tokenAuthMiddleware from "../../auth/tokenAuth.js";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";
 import multer from "multer";
 import { saveCoverCloudinary } from "../../lib/cloudinaryTools.js";
-
-/* import {
+import {
   getBlogPostPDFReadableStream,
   generateBlogPostPDFAsync,
 } from "../../lib/pdfMakeTools.js";
 import { pipeline } from "stream";
+
+/*
 import { sendEmail } from "../../lib/emailMakeTools.js";
 import { blogPostValidation, blogPostCommentValidation } from "./validation.js";
 import { validationResult } from "express-validator";*/
@@ -57,7 +58,7 @@ blogPostsRouter.post(
   async (req, res, next) => {
     try {
       const authorId = req.user._id;
-      const blogPostId = req.params.blogPostId;
+      const { blogPostId } = req.params;
       const coverUrl = req.file.path;
       const updatedBlogPost = await BlogPostModel.findOneAndUpdate(
         { _id: blogPostId, author: authorId },
@@ -154,7 +155,7 @@ blogPostsRouter.delete(
   }
 );
 
-// ================= Do a like in a blog post ====================
+// ================= likes in blogPosts ====================
 blogPostsRouter.post(
   "/:blogPostId/likes/",
   tokenAuthMiddleware,
@@ -256,6 +257,60 @@ blogPostsRouter.delete(
     }
   }
 );
+
+// ================== DOWNLOAD BLOG POST AS PDF =================
+blogPostsRouter.get(
+  "/:blogPostId/downloadPDF",
+  tokenAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const { blogPostId } = req.params;
+      const blogPost = await BlogPostModel.findById(blogPostId);
+      if (blogPost) {
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=${blogPost.title}.pdf`
+        ); // this enables to download the pdf
+        const source = await getBlogPostPDFReadableStream(blogPost);
+
+        pipeline(source, res, (err) => {
+          if (err) next(err);
+        });
+      } else {
+        res.send(
+          createHttpError(
+            404,
+            `Blog post with the id: ${blogPostId} not found.`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ================= SEND PDF AS EMAIL ======================
+blogPostsRouter.get("/:blogPostId/sendEmail", async (req, res, next) => {
+  try {
+    const paramsID = req.params._id;
+    const blogPosts = await readBlogPosts();
+    const blogPost = blogPosts.find((p) => p._id === paramsID);
+    if (blogPost) {
+      const blogPostPDFPath = await generateBlogPostPDFAsync(blogPost);
+      await sendEmail(blogPost, blogPostPDFPath);
+      await deletePDFFile(blogPostPDFPath);
+      res.send("Email sent!");
+    } else {
+      res.send(
+        createHttpError(404, `Blog post with the id: ${paramsID} not found.`)
+      );
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 /* 
 // =============== post Blog Post review =================
 blogPostsRouter.post("/:blogPostId/reviews", async (req, res, next) => {
@@ -374,52 +429,6 @@ blogPostsRouter.delete(
   }
 );
 
-// ================== DOWNLOAD BLOG POST AS PDF =================
-blogPostsRouter.get("/:blogPostId/downloadPDF", async (req, res, next) => {
-  try {
-    const paramsID = req.params._id;
-    const blogPosts = await readBlogPosts();
-    const blogPost = blogPosts.find((p) => p._id === paramsID);
-    if (blogPost) {
-      res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=blog-post.pdf"
-      ); // this enables to download the pdf
-      const source = await getBlogPostPDFReadableStream(blogPost);
-      const destination = res;
-
-      pipeline(source, destination, (err) => {
-        if (err) next(err);
-      });
-    } else {
-      res.send(
-        createHttpError(404, `Blog post with the id: ${paramsID} not found.`)
-      );
-    }
-  } catch (error) {
-    next(error);
-  }
-});
-
-// ================= SEND PDF AS EMAIL ======================
-blogPostsRouter.get("/:blogPostId/sendEmail", async (req, res, next) => {
-  try {
-    const paramsID = req.params._id;
-    const blogPosts = await readBlogPosts();
-    const blogPost = blogPosts.find((p) => p._id === paramsID);
-    if (blogPost) {
-      const blogPostPDFPath = await generateBlogPostPDFAsync(blogPost);
-      await sendEmail(blogPost, blogPostPDFPath);
-      await deletePDFFile(blogPostPDFPath);
-      res.send("Email sent!");
-    } else {
-      res.send(
-        createHttpError(404, `Blog post with the id: ${paramsID} not found.`)
-      );
-    }
-  } catch (error) {
-    next(error);
-  }
-}); */
+*/
 
 export default blogPostsRouter; // export Routing

@@ -2,8 +2,11 @@ import PdfPrinter from "pdfmake";
 import ImageDataURI from "image-data-uri";
 import { promisify } from "util";
 import { pipeline } from "stream";
-import { join } from "path";
-import { createWriteStream, readFile, remove } from "fs-extra";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import pkg from "fs-extra";
+
+const { createWriteStream, remove } = pkg;
 
 // ============= Path to keep the pdf for moments
 export const blogPostsPdfPath = join(
