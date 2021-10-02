@@ -1,5 +1,5 @@
 import createHttpError from "http-errors";
-import { verifyJWT } from "./tools.js";
+import { verifyJWT } from "./tokenTools.js";
 import AuthorModel from "../schemas/author.js";
 
 const tokenAuthMiddleware = async (req, res, next) => {

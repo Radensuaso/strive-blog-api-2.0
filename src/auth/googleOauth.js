@@ -1,7 +1,7 @@
 import GoogleStrategy from "passport-google-oauth20";
 import passport from "passport";
 import AuthorModel from "../schemas/author.js";
-import { returnJWTToken } from "./tools.js";
+import { generateJWTTokens } from "./tokenTools.js";
 
 const googleStrategy = new GoogleStrategy(
   {
@@ -15,7 +15,7 @@ const googleStrategy = new GoogleStrategy(
       const author = await AuthorModel.findOne({ googleId: profile.id });
 
       if (author) {
-        const token = await returnJWTToken(author);
+        const token = await generateJWTTokens(author);
         passportNext(null, { token });
       } else {
         const newAuthor = {
@@ -28,7 +28,7 @@ const googleStrategy = new GoogleStrategy(
 
         const createdAuthor = new AuthorModel(newAuthor);
         const savedAuthor = await createdAuthor.save();
-        const token = await returnJWTToken(savedAuthor);
+        const token = await generateJWTTokens(savedAuthor);
         passportNext(null, { token });
       }
     } catch (error) {

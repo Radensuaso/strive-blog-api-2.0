@@ -32,7 +32,7 @@ export const verifyJWT = (token) => {
 };
 
 //return token
-export const returnJWTToken = async (author) => {
+export const generateJWTTokens = async (author) => {
   const accessToken = await generateJWT({ _id: author._id });
 
   return accessToken;

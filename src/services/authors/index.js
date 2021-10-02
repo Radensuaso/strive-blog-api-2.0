@@ -4,11 +4,13 @@ import q2m from "query-to-mongo";
 import createHttpError from "http-errors";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";
 import tokenAuthMiddleware from "../../auth/tokenAuth.js";
-import { returnJWTToken } from "../../auth/tools.js";
+import { generateJWTTokens } from "../../auth/tokenTools.js";
 import passport from "passport";
+import multer from "multer";
+import { saveAvatarCloudinary } from "../../lib/cloudinaryTools.js";
+
 /* import { authorsValidation } from "./validation.js";
 import { validationResult } from "express-validator";
-import multer from "multer";
 import { pipeline } from "stream";
 import json2csv from "json2csv"; */
 
@@ -44,7 +46,7 @@ authorsRouter.post("/login", async (req, res, next) => {
     const { email, password } = req.body;
     const author = await AuthorModel.checkCredentials(email, password);
     if (author) {
-      const accessToken = await returnJWTToken(author);
+      const accessToken = await generateJWTTokens(author);
       res.send(accessToken);
     } else {
       next(createHttpError(401, "Email and/or password are wrong."));
@@ -106,6 +108,31 @@ authorsRouter.delete("/me", tokenAuthMiddleware, async (req, res, next) => {
     next(error);
   }
 });
+
+// =================== upload avatar ====================
+
+authorsRouter.post(
+  "/me/uploadAvatar",
+  tokenAuthMiddleware,
+  multer({ storage: saveAvatarCloudinary }).single("avatar"),
+  async (req, res, next) => {
+    try {
+      const authorId = req.user._id;
+      const avatarUrl = req.file.path;
+
+      const updatedAuthor = await AuthorModel.findByIdAndUpdate(
+        authorId,
+        {
+          avatar: avatarUrl,
+        },
+        { new: true }
+      );
+      res.send(updatedAuthor);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // =================== Get single Author ====================
 authorsRouter.get(
@@ -174,33 +201,7 @@ authorsRouter.delete(
 );
 
 /* 
-// =================== AUTHORS AVATAR ====================
 
-authorsRouter.post(
-  "/me/uploadAvatar",
-  multer({ storage: saveAvatarCloudinary }).single("avatar"),
-  async (req, res, next) => {
-    try {
-      const paramsId = req.params._id;
-      const authors = await readAuthors();
-      const author = authors.find((a) => a._id === paramsId);
-      if (author) {
-        const avatarUrl = req.file.path;
-        const updatedAuthor = { ...author, avatar: avatarUrl };
-        const remainingAuthors = authors.filter((a) => a._id !== paramsId);
-        remainingAuthors.push(updatedAuthor);
-        await writeAuthors(remainingAuthors);
-        res.send(updatedAuthor);
-      } else {
-        next(
-          createHttpError(404, `Author with the id: ${paramsId} was not found.`)
-        );
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
 
 // ================= Download CSV File ==================
 authorsRouter.get("/download/CSV", async (req, res, next) => {
