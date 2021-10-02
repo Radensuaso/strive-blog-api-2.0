@@ -1,5 +1,5 @@
 import express from "express";
-import AuthorModel from "./schema.js";
+import AuthorModel from "../../schemas/author.js";
 import q2m from "query-to-mongo";
 import createHttpError from "http-errors";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";

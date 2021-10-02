@@ -1,6 +1,6 @@
 import express from "express";
 import createHttpError from "http-errors";
-import BlogPostModel from "./schema.js";
+import BlogPostModel from "../../schemas/blogPost.js";
 import q2m from "query-to-mongo";
 import tokenAuthMiddleware from "../../auth/tokenAuth.js";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";

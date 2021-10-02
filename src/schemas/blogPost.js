@@ -45,4 +45,6 @@ blogPostSchema.static("findBlogPosts", async function (query) {
   return { total, blogPosts };
 });
 
-export default model("blogPost", blogPostSchema);
+const BlogPostModel = model("blogPost", blogPostSchema);
+
+export default BlogPostModel;

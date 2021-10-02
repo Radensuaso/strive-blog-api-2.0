@@ -77,4 +77,6 @@ authorSchema.statics.checkCredentials = async function (email, password) {
   }
 };
 
-export default model("author", authorSchema);
+const AuthorModel = model("author", authorSchema);
+
+export default AuthorModel;
