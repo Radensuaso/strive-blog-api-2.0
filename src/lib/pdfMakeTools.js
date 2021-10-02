@@ -2,14 +2,26 @@ import PdfPrinter from "pdfmake";
 import ImageDataURI from "image-data-uri";
 import { promisify } from "util";
 import { pipeline } from "stream";
-import { blogPostsFolderPath, writePDFStream } from "./writeReadTools.js";
 import { join } from "path";
+import { createWriteStream, readFile, remove } from "fs-extra";
 
+// ============= Path to keep the pdf for moments
+export const blogPostsPdfPath = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../public/blogPosts/pdf"
+);
+
+// ==================== Tools to write and read pdf
+export const writePDFStream = async (path) => await createWriteStream(path);
+export const deletePDFFile = async (path) => await remove(path);
+
+//============= turnToBase64Format
 const turnToBase64Format = async (url) => {
   const urlBase64 = await ImageDataURI.encodeFromURL(url);
   return urlBase64;
 };
 
+// ============== fonts to use in pdf  options
 const fonts = {
   Roboto: {
     normal: "Helvetica",
@@ -19,6 +31,7 @@ const fonts = {
   },
 };
 
+//=================== get pd readableStream
 export const getBlogPostPDFReadableStream = async (blogPost) => {
   const printer = new PdfPrinter(fonts);
   const base64Image = await turnToBase64Format(blogPost.cover);
@@ -46,6 +59,8 @@ export const getBlogPostPDFReadableStream = async (blogPost) => {
   pdfReadableStream.end();
   return pdfReadableStream;
 };
+
+//=================== generate blog post PDF sync
 
 export const generateBlogPostPDFAsync = async (blogPost) => {
   const asyncPipeline = promisify(pipeline);

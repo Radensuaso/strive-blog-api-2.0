@@ -1,5 +1,6 @@
 import sgMail from "@sendgrid/mail";
-import { readPDFFile } from "./writeReadTools.js";
+
+export const readPDFFile = async (path) => await readFile(path);
 
 sgMail.setApiKey(process.env.SEND_GRID_API_KEY);
 
