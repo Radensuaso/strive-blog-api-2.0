@@ -8,9 +8,10 @@ import { generateJWTTokens } from "../../auth/tokenTools.js";
 import passport from "passport";
 import multer from "multer";
 import { saveAvatarCloudinary } from "../../lib/cloudinaryTools.js";
-
-/* import { authorsValidation } from "./validation.js";
+import { authorsValidation } from "../../validation/author.js";
 import { validationResult } from "express-validator";
+
+/* 
 import { pipeline } from "stream";
 import json2csv from "json2csv"; */
 
@@ -30,11 +31,20 @@ authorsRouter.get("/", async (req, res, next) => {
 });
 
 // =================== Register Author ====================
-authorsRouter.post("/register", async (req, res, next) => {
+authorsRouter.post("/register", authorsValidation, async (req, res, next) => {
   try {
-    const newAuthor = new AuthorModel(req.body);
-    const savedAuthor = await newAuthor.save();
-    res.status(201).send(savedAuthor);
+    const errorList = validationResult(req);
+    if (errorList.isEmpty()) {
+      if (req.body.password) {
+        const newAuthor = new AuthorModel(req.body);
+        const savedAuthor = await newAuthor.save();
+        res.status(201).send(savedAuthor);
+      } else {
+        next(createHttpError(400, "Password is Required!"));
+      }
+    } else {
+      next(createHttpError(400, errorList));
+    }
   } catch (error) {
     next(error);
   }
@@ -144,32 +154,6 @@ authorsRouter.get(
       const author = await AuthorModel.findById(authorId);
       if (author) {
         res.send(author);
-      } else {
-        next(createHttpError(404, `Author with id: ${authorId} not found`));
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-// =================== Update Author ====================
-authorsRouter.put(
-  "/:authorId",
-  tokenAuthMiddleware,
-  adminOnlyMiddleware,
-  async (req, res, next) => {
-    try {
-      const { authorId } = req.params;
-      const updatedAuthor = await AuthorModel.findByIdAndUpdate(
-        authorId,
-        req.body,
-        {
-          new: true,
-        }
-      );
-      if (updatedAuthor) {
-        res.send(updatedAuthor);
       } else {
         next(createHttpError(404, `Author with id: ${authorId} not found`));
       }

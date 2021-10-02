@@ -1,8 +1,24 @@
 import { body } from "express-validator";
 
 export const authorsValidation = [
-  body("name").exists().withMessage("Name is a mandatory field!"),
-  body("surname").exists().withMessage("Surname is a mandatory field!"),
-  body("email").isEmail().withMessage("Must be a valid email!"),
-  body("birthDate").exists().withMessage("Birth Date is a mandatory field!"),
+  body("name").exists().isString().withMessage("Name must be a String!"),
+  body("email").exists().isEmail().withMessage("Email Must be a valid email!"),
+  body("role").exists().isString().withMessage("Role must be a String!"),
+  body("password")
+    .optional()
+    .isString()
+    .isLength({ min: 8 })
+    .withMessage("Password must be minimum 8 Chars."),
+  body("birthDate")
+    .optional()
+    .isString()
+    .withMessage("Birth Date must be a String"),
+  body("avatar")
+    .optional()
+    .isString()
+    .withMessage("Avatar Date must be a String"),
+  body("googleId")
+    .optional()
+    .isString()
+    .withMessage("Google id must be a string."),
 ];

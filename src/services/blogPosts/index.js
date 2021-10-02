@@ -13,10 +13,8 @@ import {
 } from "../../lib/pdfMakeTools.js";
 import { pipeline } from "stream";
 import { sendEmail } from "../../lib/emailTools.js";
-
-/*
-import { blogPostValidation, blogPostCommentValidation } from "./validation.js";
-import { validationResult } from "express-validator";*/
+import { blogPostValidation } from "../../validation/blogPost.js";
+import { validationResult } from "express-validator";
 
 const blogPostsRouter = express.Router(); // provide Routing
 
@@ -37,14 +35,21 @@ blogPostsRouter.get("/", async (req, res, next) => {
 blogPostsRouter.post(
   "/stories",
   tokenAuthMiddleware,
+  blogPostValidation,
   async (req, res, next) => {
     try {
-      const newBlogPost = new BlogPostModel({
-        ...req.body,
-        author: req.user._id,
-      });
-      const savedBlogPost = await newBlogPost.save();
-      res.status(201).send(savedBlogPost);
+      const errorList = validationResult(req);
+      if (errorList.isEmpty()) {
+        const newBlogPost = new BlogPostModel({
+          ...req.body,
+          author: req.user._id,
+        });
+        const savedBlogPost = await newBlogPost.save();
+        res.status(201).send(savedBlogPost);
+      } else {
+        console.log("ERROR LIST", errorList);
+        next(createHttpError(400, errorList));
+      }
     } catch (error) {
       next(error);
     }
@@ -209,33 +214,6 @@ blogPostsRouter.get("/:blogPostId", async (req, res, next) => {
     next(error);
   }
 });
-
-// =============== Update Blog Post =================
-blogPostsRouter.put(
-  "/:blogPostId",
-  tokenAuthMiddleware,
-  adminOnlyMiddleware,
-  async (req, res, next) => {
-    try {
-      const { blogPostId } = req.params;
-
-      const updatedBlogPost = await BlogPostModel.findByIdAndUpdate(
-        blogPostId,
-        req.body,
-        { new: true }
-      );
-      if (updatedBlogPost) {
-        res.send(updatedBlogPost);
-      } else {
-        next(
-          createHttpError(404, `Blog Post with id: ${blogPostId} not found!`)
-        );
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
 
 // =============== Delete Blog Post =================
 blogPostsRouter.delete(

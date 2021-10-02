@@ -7,16 +7,16 @@ const authorSchema = new Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String },
-    birthDate: { type: Date },
-    avatar: { type: String, required: true },
-    googleId: { type: String },
     role: {
       type: String,
       required: true,
       enum: ["Author", "Admin"],
       default: "Author",
     },
+    password: { type: String },
+    birthDate: { type: Date },
+    avatar: { type: String },
+    googleId: { type: String },
   },
   { timestamps: true }
 );
