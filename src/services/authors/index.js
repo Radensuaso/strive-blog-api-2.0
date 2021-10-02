@@ -110,7 +110,6 @@ authorsRouter.delete("/me", tokenAuthMiddleware, async (req, res, next) => {
 });
 
 // =================== upload avatar ====================
-
 authorsRouter.post(
   "/me/uploadAvatar",
   tokenAuthMiddleware,

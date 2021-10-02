@@ -4,6 +4,8 @@ import BlogPostModel from "../../schemas/blogPost.js";
 import q2m from "query-to-mongo";
 import tokenAuthMiddleware from "../../auth/tokenAuth.js";
 import adminOnlyMiddleware from "../../auth/adminAuth.js";
+import multer from "multer";
+import { saveCoverCloudinary } from "../../lib/cloudinaryTools.js";
 
 /* import {
   getBlogPostPDFReadableStream,
@@ -12,8 +14,7 @@ import adminOnlyMiddleware from "../../auth/adminAuth.js";
 import { pipeline } from "stream";
 import { sendEmail } from "../../lib/emailMakeTools.js";
 import { blogPostValidation, blogPostCommentValidation } from "./validation.js";
-import { validationResult } from "express-validator";
-import multer from "multer"; */
+import { validationResult } from "express-validator";*/
 
 const blogPostsRouter = express.Router(); // provide Routing
 
@@ -31,23 +32,60 @@ blogPostsRouter.get("/", async (req, res, next) => {
 });
 
 // =============== Post Blog Post =================
-blogPostsRouter.post("/", tokenAuthMiddleware, async (req, res, next) => {
-  try {
-    const newBlogPost = new BlogPostModel({
-      ...req.body,
-      author: req.user._id,
-    });
-    const savedBlogPost = await newBlogPost.save();
-    res.status(201).send(savedBlogPost);
-  } catch (error) {
-    next(error);
+blogPostsRouter.post(
+  "/stories",
+  tokenAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const newBlogPost = new BlogPostModel({
+        ...req.body,
+        author: req.user._id,
+      });
+      const savedBlogPost = await newBlogPost.save();
+      res.status(201).send(savedBlogPost);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
+
+// =============== post blog post cover =================
+blogPostsRouter.post(
+  "/:blogPostId/stories/uploadCover",
+  tokenAuthMiddleware,
+  multer({ storage: saveCoverCloudinary }).single("cover"),
+  async (req, res, next) => {
+    try {
+      const authorId = req.user._id;
+      const blogPostId = req.params.blogPostId;
+      const coverUrl = req.file.path;
+      const updatedBlogPost = await BlogPostModel.findOneAndUpdate(
+        { _id: blogPostId, author: authorId },
+        { cover: coverUrl },
+        { new: true }
+      );
+      if (updatedBlogPost) {
+        res.send(updatedBlogPost);
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Blog post with the id: ${blogPostId} was not found, or you have not permission to this blogPost.`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // =============== Get my Blog posts ========================
 blogPostsRouter.get("/stories", tokenAuthMiddleware, async (req, res, next) => {
   try {
-    const myBlogPosts = await BlogPostModel.find({ author: req.user._id });
+    const myBlogPosts = await BlogPostModel.find({
+      author: req.user._id,
+    }).populate("author");
     res.send(myBlogPosts);
   } catch (error) {
     next(error);
@@ -157,7 +195,9 @@ blogPostsRouter.post(
 blogPostsRouter.get("/:blogPostId", async (req, res, next) => {
   try {
     const { blogPostId } = req.params;
-    const blogPost = await BlogPostModel.findById(blogPostId);
+    const blogPost = await BlogPostModel.findById(blogPostId).populate(
+      "author"
+    );
     if (blogPost) {
       res.send(blogPost);
     } else {
@@ -216,7 +256,7 @@ blogPostsRouter.delete(
     }
   }
 );
-
+/* 
 // =============== post Blog Post review =================
 blogPostsRouter.post("/:blogPostId/reviews", async (req, res, next) => {
   try {
@@ -327,38 +367,6 @@ blogPostsRouter.delete(
         res.send(blogPost);
       } else {
         next(createHttpError(404, `Not found!`));
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
-/* 
-// =============== BLOG POSTS COVER =================
-blogPostsRouter.post(
-  "/:blogPostId/uploadCover",
-  multer({ storage: saveCoverCloudinary }).single("cover"),
-  async (req, res, next) => {
-    try {
-      const paramsId = req.params._id;
-      const blogPosts = await readBlogPosts();
-      const blogPost = blogPosts.find((p) => p._id === paramsId);
-      if (blogPost) {
-        const coverUrl = req.file.path;
-        const updatedBlogPost = { ...blogPost, cover: coverUrl };
-        const remainingBlogPosts = blogPosts.filter((p) => p._id !== paramsId);
-
-        remainingBlogPosts.push(updatedBlogPost);
-        await writeBlogPosts(remainingBlogPosts);
-        res.send(updatedBlogPost);
-      } else {
-        next(
-          createHttpError(
-            404,
-            `Blog post with the id: ${paramsId} was not found.`
-          )
-        );
       }
     } catch (error) {
       next(error);
