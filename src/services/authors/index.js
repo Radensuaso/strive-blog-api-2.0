@@ -177,7 +177,7 @@ authorsRouter.delete(
 // =================== AUTHORS AVATAR ====================
 
 authorsRouter.post(
-  "/:authorId/uploadAvatar",
+  "/me/uploadAvatar",
   multer({ storage: saveAvatarCloudinary }).single("avatar"),
   async (req, res, next) => {
     try {

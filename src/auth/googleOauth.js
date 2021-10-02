@@ -1,6 +1,6 @@
 import GoogleStrategy from "passport-google-oauth20";
 import passport from "passport";
-import AuthorModel from "../services/authors/schema.js";
+import AuthorModel from "../schemas/author.js";
 import { returnJWTToken } from "./tools.js";
 
 const googleStrategy = new GoogleStrategy(
