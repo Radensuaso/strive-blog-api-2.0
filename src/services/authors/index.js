@@ -10,10 +10,8 @@ import multer from "multer";
 import { saveAvatarCloudinary } from "../../lib/cloudinaryTools.js";
 import { authorsValidation } from "../../validation/author.js";
 import { validationResult } from "express-validator";
-
-/* 
 import { pipeline } from "stream";
-import json2csv from "json2csv"; */
+import json2csv from "json2csv";
 
 const authorsRouter = express.Router(); // provide Routing
 
@@ -119,6 +117,29 @@ authorsRouter.delete("/me", tokenAuthMiddleware, async (req, res, next) => {
   }
 });
 
+// ================= Download CSV File ==================
+authorsRouter.get("/me/CSV", tokenAuthMiddleware, async (req, res, next) => {
+  try {
+    const authorId = req.user._id;
+    const author = await AuthorModel.findById(authorId);
+    const jsonAuthor = JSON.parse(JSON.stringify(author));
+
+    const CSVFields = ["_id", "name", "email", "role", "birthDate", "avatar"];
+    const json2CSVParser = new json2csv.Parser({ CSVFields });
+    const CSVauthor = json2CSVParser.parse(jsonAuthor);
+
+    res.setHeader(
+      "Content-disposition",
+      `attachment; filename=${author.name}.csv`
+    );
+
+    res.set("Content-Type", "text/csv");
+    res.status(200).end(CSVauthor);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // =================== upload avatar ====================
 authorsRouter.post(
   "/me/uploadAvatar",
@@ -182,25 +203,5 @@ authorsRouter.delete(
     }
   }
 );
-
-/* 
-
-
-// ================= Download CSV File ==================
-authorsRouter.get("/download/CSV", async (req, res, next) => {
-  try {
-    res.setHeader("Content-Disposition", `attachment; filename=Authors.csv`);
-    const source = getAuthorsReadableStream();
-    const transform = new json2csv.Transform({
-      fields: ["_id", "name", "surname", "email", "birthDate", "avatar"],
-    });
-    const destination = res;
-    pipeline(source, transform, destination, (err) => {
-      if (err) next(err);
-    });
-  } catch (error) {
-    next(error);
-  }
-}); */
 
 export default authorsRouter;
